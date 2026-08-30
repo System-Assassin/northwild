@@ -15,10 +15,15 @@ namespace Northwild
         private const string RealHeightmapResource = "Heightmaps/femundsmarka_nedre_roasten";
 
         private Terrain terrain;
+        private NorthwildTerrainWeathering terrainWeathering;
         private Transform generatedRoot;
         private Vector3 playerSpawn;
 
         public Vector3 PlayerSpawn { get { return playerSpawn; } }
+        public float SnowCover01
+        {
+            get { return terrainWeathering == null ? 0f : terrainWeathering.SnowCover01; }
+        }
 
         public void Generate()
         {
@@ -67,10 +72,13 @@ namespace Northwild
             terrain.treeDistance = 720f;
             terrain.treeBillboardDistance = 230f;
             if (NorthwildGame.Instance != null)
-                terrainObject.AddComponent<NorthwildTerrainWeathering>().Configure(
+            {
+                terrainWeathering = terrainObject.AddComponent<NorthwildTerrainWeathering>();
+                terrainWeathering.Configure(
                     terrain,
                     NorthwildGame.Instance.Climate,
                     LakeSurfaceY);
+            }
         }
 
         private static float[,] LoadRealHeightmap()
@@ -283,25 +291,81 @@ namespace Northwild
 
         private void CreateLake()
         {
-            GameObject lake = NorthwildVisuals.Primitive(
-                PrimitiveType.Plane,
-                "Nedre Roasten Water Surface",
-                generatedRoot,
-                new Vector3(WorldSize * 0.5f, LakeSurfaceY - 0.055f, WorldSize * 0.5f),
-                new Vector3(WorldSize / 10f, 1f, WorldSize / 10f),
-                new Color(0.055f, 0.19f, 0.27f));
-            Renderer waterRenderer = lake.GetComponent<Renderer>();
+            GameObject lake = new GameObject("Nedre Roasten Water Surface");
+            lake.transform.SetParent(generatedRoot, false);
+            lake.transform.localPosition = new Vector3(
+                WorldSize * 0.5f,
+                LakeSurfaceY - 0.055f,
+                WorldSize * 0.5f);
+            MeshFilter waterMeshFilter = lake.AddComponent<MeshFilter>();
+            waterMeshFilter.sharedMesh = CreateLakeMesh();
+            MeshRenderer waterRenderer = lake.AddComponent<MeshRenderer>();
             waterRenderer.sharedMaterial = NorthwildVisuals.WaterMaterial();
-            NorthwildVisuals.RemoveCollider(lake);
+            waterRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            waterRenderer.receiveShadows = true;
+            waterRenderer.allowOcclusionWhenDynamic = false;
             BoxCollider waterTrigger = lake.AddComponent<BoxCollider>();
-            waterTrigger.center = new Vector3(0f, -0.02f, 0f);
-            waterTrigger.size = new Vector3(10f, 0.08f, 10f);
+            waterTrigger.center = new Vector3(0f, -0.04f, 0f);
+            waterTrigger.size = new Vector3(WorldSize, 0.14f, WorldSize);
             waterTrigger.isTrigger = true;
             lake.AddComponent<WaterSource>();
             if (NorthwildGame.Instance != null)
                 lake.AddComponent<NorthwildWaterSurface>().Configure(
                     waterRenderer,
+                    waterMeshFilter,
                     NorthwildGame.Instance.Climate);
+        }
+
+        private static Mesh CreateLakeMesh()
+        {
+            const int resolution = 64;
+            int verticesPerSide = resolution + 1;
+            Vector3[] vertices = new Vector3[verticesPerSide * verticesPerSide];
+            Vector3[] normals = new Vector3[vertices.Length];
+            Vector2[] uvs = new Vector2[vertices.Length];
+            int[] triangles = new int[resolution * resolution * 6];
+
+            for (int z = 0; z < verticesPerSide; z++)
+            {
+                float normalZ = z / (float)resolution;
+                for (int x = 0; x < verticesPerSide; x++)
+                {
+                    float normalX = x / (float)resolution;
+                    int index = z * verticesPerSide + x;
+                    vertices[index] = new Vector3(
+                        (normalX - 0.5f) * WorldSize,
+                        0f,
+                        (normalZ - 0.5f) * WorldSize);
+                    normals[index] = Vector3.up;
+                    uvs[index] = new Vector2(normalX, normalZ);
+                }
+            }
+
+            int triangleIndex = 0;
+            for (int z = 0; z < resolution; z++)
+            {
+                for (int x = 0; x < resolution; x++)
+                {
+                    int lowerLeft = z * verticesPerSide + x;
+                    int upperLeft = lowerLeft + verticesPerSide;
+                    triangles[triangleIndex++] = lowerLeft;
+                    triangles[triangleIndex++] = upperLeft;
+                    triangles[triangleIndex++] = lowerLeft + 1;
+                    triangles[triangleIndex++] = lowerLeft + 1;
+                    triangles[triangleIndex++] = upperLeft;
+                    triangles[triangleIndex++] = upperLeft + 1;
+                }
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.name = "Animated Nedre Roasten Water Grid";
+            mesh.MarkDynamic();
+            mesh.vertices = vertices;
+            mesh.normals = normals;
+            mesh.uv = uvs;
+            mesh.triangles = triangles;
+            mesh.bounds = new Bounds(Vector3.zero, new Vector3(WorldSize, 1.5f, WorldSize));
+            return mesh;
         }
 
         private void CreateForest()

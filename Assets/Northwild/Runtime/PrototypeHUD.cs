@@ -82,7 +82,7 @@ namespace Northwild
 
         private void DrawWorldPanel()
         {
-            Rect panel = new Rect(Screen.width - 295f, 18f, 277f, 135f);
+            Rect panel = new Rect(Screen.width - 295f, 18f, 277f, 161f);
             GUI.Box(panel, GUIContent.none, panelStyle);
             GUI.Label(new Rect(panel.x + 15f, panel.y + 12f, 230f, 25f), game.Climate.TimeLabel, titleStyle);
             GUI.Label(new Rect(panel.x + 15f, panel.y + 48f, 245f, 22f),
@@ -91,6 +91,8 @@ namespace Northwild
                 "Wind " + game.Climate.WindMetresPerSecond.ToString("0.0") + " m/s", textStyle);
             GUI.Label(new Rect(panel.x + 15f, panel.y + 100f, 245f, 22f),
                 "Feels like " + game.Vitals.EffectiveTemperatureC.ToString("0.0") + " °C", textStyle);
+            GUI.Label(new Rect(panel.x + 15f, panel.y + 126f, 245f, 22f),
+                "Ground snow " + (game.World.SnowCover01 * 100f).ToString("0") + "%", textStyle);
         }
 
         private void DrawCrosshairAndPrompt()

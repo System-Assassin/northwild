@@ -103,15 +103,15 @@ namespace Northwild
             if (waterMaterial.HasProperty("_NormalMap"))
             {
                 waterMaterial.SetTexture("_NormalMap", ripples);
-                waterMaterial.SetTextureScale("_NormalMap", new Vector2(18f, 18f));
-                SetFloatIfPresent(waterMaterial, "_NormalScale", 0.38f);
+                waterMaterial.SetTextureScale("_NormalMap", new Vector2(85f, 85f));
+                SetFloatIfPresent(waterMaterial, "_NormalScale", 0.56f);
             }
             if (waterMaterial.HasProperty("_DetailMap"))
             {
                 waterMaterial.SetTexture("_DetailMap", ripples);
-                waterMaterial.SetTextureScale("_DetailMap", new Vector2(47f, 47f));
+                waterMaterial.SetTextureScale("_DetailMap", new Vector2(190f, 190f));
                 SetFloatIfPresent(waterMaterial, "_DetailAlbedoScale", 0f);
-                SetFloatIfPresent(waterMaterial, "_DetailNormalScale", 0.19f);
+                SetFloatIfPresent(waterMaterial, "_DetailNormalScale", 0.31f);
             }
 
             waterMaterial.renderQueue = (int)RenderQueue.Transparent;
