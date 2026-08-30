@@ -23,7 +23,9 @@ The clear-weather lighting uses a neutral white sun, controlled HDRP exposure an
 
 The texture importer configures the supplied normal maps, HDRP mask maps and coverage-preserving vegetation alpha automatically. If a texture ever appears flat, glossy or boxed-in after an interrupted import, select **Northwild > HDRP > Reimport PBR Textures** once.
 
-The visual realism pass replaces the original sphere trees and capsule player with layered Norway spruce and downy birch crowns, batched bilberry/fern undergrowth, exposed-rock terrain blending, fallen timber, cut-ended firewood, detailed gatherable props, a layered-bough shelter and an articulated third-person survivor with a walking gait.
+The visual realism pass replaces the original sphere trees and capsule player with layered Norway spruce and downy birch crowns, batched bilberry/fern undergrowth, exposed-rock terrain blending, fallen timber, cut-ended firewood, detailed gatherable props, a layered-bough shelter and an articulated third-person survivor with a walking gait. Trees now respond subtly to the live wind model, snow settles and melts on suitable ground, and Nedre Roasten has animated multi-scale ripples instead of a flat blue surface.
+
+High-quality TAA stabilises fine needles and branches. The player camera now renders the complete 1 km terrain and uses a safer near clipping plane, while weather-dependent volumetric fog replaces the old hard 400 m horizon.
 
 The measured heightmap preserves the real shoreline, islands and land relief. A shallow synthetic lake bed was added beneath the surveyed water surface so the HDRP water plane renders cleanly. Source details and attribution are in `Assets/Northwild/SourceData/Heightmaps/README.md`.
 

@@ -64,6 +64,13 @@ namespace Northwild
             terrain.drawInstanced = true;
             terrain.heightmapPixelError = 5f;
             terrain.basemapDistance = WorldSize;
+            terrain.treeDistance = 720f;
+            terrain.treeBillboardDistance = 230f;
+            if (NorthwildGame.Instance != null)
+                terrainObject.AddComponent<NorthwildTerrainWeathering>().Configure(
+                    terrain,
+                    NorthwildGame.Instance.Climate,
+                    LakeSurfaceY);
         }
 
         private static float[,] LoadRealHeightmap()
@@ -152,10 +159,26 @@ namespace Northwild
             rockLayer.tileSize = new Vector2(4.2f, 4.2f);
             rockLayer.metallic = 0f;
             rockLayer.smoothness = 0.12f;
-            data.terrainLayers = new[] { groundLayer, rockLayer };
+
+            TerrainLayer shorelineLayer = new TerrainLayer();
+            shorelineLayer.name = "Damp Peat and Shore Gravel";
+            shorelineLayer.diffuseTexture = CreateShorelineTexture();
+            shorelineLayer.normalScale = 0.45f;
+            shorelineLayer.tileSize = new Vector2(3.2f, 3.2f);
+            shorelineLayer.metallic = 0f;
+            shorelineLayer.smoothness = 0.18f;
+
+            TerrainLayer snowLayer = new TerrainLayer();
+            snowLayer.name = "Fresh Scandinavian Snow";
+            snowLayer.diffuseTexture = CreateSnowTexture();
+            snowLayer.normalScale = 0.3f;
+            snowLayer.tileSize = new Vector2(4.8f, 4.8f);
+            snowLayer.metallic = 0f;
+            snowLayer.smoothness = 0.24f;
+            data.terrainLayers = new[] { groundLayer, rockLayer, shorelineLayer, snowLayer };
 
             data.alphamapResolution = 512;
-            float[,,] blend = new float[data.alphamapHeight, data.alphamapWidth, 2];
+            float[,,] blend = new float[data.alphamapHeight, data.alphamapWidth, 4];
             for (int z = 0; z < data.alphamapHeight; z++)
             {
                 for (int x = 0; x < data.alphamapWidth; x++)
@@ -166,8 +189,20 @@ namespace Northwild
                     float noise = Mathf.PerlinNoise(normalX * 31f + 8f, normalZ * 31f + 19f);
                     float exposedRock = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(24f, 43f, slope));
                     exposedRock = Mathf.Clamp01(exposedRock + Mathf.Max(0f, noise - 0.72f) * 0.24f);
-                    blend[z, x, 0] = 1f - exposedRock;
-                    blend[z, x, 1] = exposedRock;
+                    float worldHeight = data.GetInterpolatedHeight(normalX, normalZ);
+                    float wetShore = worldHeight <= LakeSurfaceY
+                        ? 0f
+                        : 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(
+                            LakeSurfaceY + 0.18f,
+                            LakeSurfaceY + 2.8f,
+                            worldHeight));
+                    wetShore *= 1f - Mathf.Clamp01(slope / 34f);
+                    wetShore *= Mathf.Lerp(0.78f, 1f, noise);
+                    float remaining = 1f - wetShore;
+                    blend[z, x, 0] = (1f - exposedRock) * remaining;
+                    blend[z, x, 1] = exposedRock * remaining;
+                    blend[z, x, 2] = wetShore;
+                    blend[z, x, 3] = 0f;
                 }
             }
             data.SetAlphamaps(0, 0, blend);
@@ -190,19 +225,83 @@ namespace Northwild
             return texture;
         }
 
+        private static Texture2D CreateShorelineTexture()
+        {
+            const int size = 128;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGB24, true);
+            texture.name = "Procedural Damp Peat and Shore Gravel";
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.filterMode = FilterMode.Trilinear;
+            texture.anisoLevel = 6;
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float peat = Mathf.PerlinNoise(x * 0.048f + 11f, y * 0.048f + 29f);
+                    float gravel = Mathf.PerlinNoise(x * 0.22f + 43f, y * 0.22f + 7f);
+                    Color darkPeat = new Color(0.105f, 0.09f, 0.062f);
+                    Color stone = new Color(0.31f, 0.315f, 0.29f);
+                    float stones = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.69f, 0.87f, gravel));
+                    pixels[y * size + x] = Color.Lerp(
+                        darkPeat * Mathf.Lerp(0.78f, 1.18f, peat),
+                        stone,
+                        stones * 0.58f);
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply(true, true);
+            return texture;
+        }
+
+        private static Texture2D CreateSnowTexture()
+        {
+            const int size = 128;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGB24, true);
+            texture.name = "Procedural Wind-Packed Snow";
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.filterMode = FilterMode.Trilinear;
+            texture.anisoLevel = 6;
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float broad = Mathf.PerlinNoise(x * 0.04f + 19f, y * 0.04f + 61f);
+                    float crystals = Mathf.PerlinNoise(x * 0.27f + 3f, y * 0.27f + 41f);
+                    float brightness = Mathf.Lerp(0.84f, 0.98f, broad * 0.72f + crystals * 0.28f);
+                    pixels[y * size + x] = new Color(
+                        brightness * 0.91f,
+                        brightness * 0.95f,
+                        brightness);
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply(true, true);
+            return texture;
+        }
+
         private void CreateLake()
         {
             GameObject lake = NorthwildVisuals.Primitive(
-                PrimitiveType.Cube,
+                PrimitiveType.Plane,
                 "Nedre Roasten Water Surface",
                 generatedRoot,
-                new Vector3(WorldSize * 0.5f, LakeSurfaceY - 0.12f, WorldSize * 0.5f),
-                new Vector3(WorldSize, 0.24f, WorldSize),
+                new Vector3(WorldSize * 0.5f, LakeSurfaceY - 0.055f, WorldSize * 0.5f),
+                new Vector3(WorldSize / 10f, 1f, WorldSize / 10f),
                 new Color(0.055f, 0.19f, 0.27f));
-            lake.GetComponent<Renderer>().sharedMaterial = NorthwildVisuals.Material(
-                new Color(0.055f, 0.19f, 0.27f), 0.88f);
-            lake.GetComponent<BoxCollider>().isTrigger = true;
+            Renderer waterRenderer = lake.GetComponent<Renderer>();
+            waterRenderer.sharedMaterial = NorthwildVisuals.WaterMaterial();
+            NorthwildVisuals.RemoveCollider(lake);
+            BoxCollider waterTrigger = lake.AddComponent<BoxCollider>();
+            waterTrigger.center = new Vector3(0f, -0.02f, 0f);
+            waterTrigger.size = new Vector3(10f, 0.08f, 10f);
+            waterTrigger.isTrigger = true;
             lake.AddComponent<WaterSource>();
+            if (NorthwildGame.Instance != null)
+                lake.AddComponent<NorthwildWaterSurface>().Configure(
+                    waterRenderer,
+                    NorthwildGame.Instance.Climate);
         }
 
         private void CreateForest()
@@ -248,6 +347,10 @@ namespace Northwild
                 CreateTree(forest, position, scale, birch);
                 created++;
             }
+
+            if (NorthwildGame.Instance != null)
+                forest.gameObject.AddComponent<NorthwildVegetationWind>().Configure(
+                    NorthwildGame.Instance.Climate);
         }
 
         private void CreateTree(Transform parent, Vector3 position, float scale, bool birch)

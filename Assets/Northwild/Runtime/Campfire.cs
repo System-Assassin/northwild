@@ -310,7 +310,15 @@ namespace Northwild
             if (fireEffects != null && lit)
             {
                 if (fireLight != null)
-                    fireLight.intensity = 720f + Mathf.Sin(Time.time * 11f) * 65f + UnityEngine.Random.value * 90f;
+                {
+                    float broadFlicker = Mathf.PerlinNoise(Time.time * 2.85f, transform.position.x * 0.071f);
+                    float flamePulse = Mathf.Sin(Time.time * 10.7f + transform.position.z) * 0.5f + 0.5f;
+                    fireLight.intensity = 1420f + broadFlicker * 760f + flamePulse * 170f;
+                    fireLight.color = Color.Lerp(
+                        new Color(1f, 0.25f, 0.045f),
+                        new Color(1f, 0.52f, 0.12f),
+                        broadFlicker * 0.72f);
+                }
             }
         }
 
@@ -374,10 +382,10 @@ namespace Northwild
             fireLight.type = LightType.Point;
             fireLight.lightUnit = LightUnit.Lumen;
             fireLight.color = new Color(1f, 0.35f, 0.075f);
-            fireLight.range = 7.5f;
+            fireLight.range = 10.5f;
             fireLight.shadows = LightShadows.Soft;
-            fireLight.shadowStrength = 0.42f;
-            fireLight.intensity = 760f;
+            fireLight.shadowStrength = 0.54f;
+            fireLight.intensity = 1800f;
             SetFlame(false);
         }
 

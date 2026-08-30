@@ -76,9 +76,14 @@ namespace Northwild
             GameObject cameraObject = new GameObject("Player Camera");
             cameraObject.transform.SetParent(transform);
             playerCamera = cameraObject.AddComponent<Camera>();
-            cameraObject.AddComponent<HDAdditionalCameraData>();
-            playerCamera.nearClipPlane = 0.04f;
-            playerCamera.farClipPlane = 400f;
+            HDAdditionalCameraData cameraData = cameraObject.AddComponent<HDAdditionalCameraData>();
+            cameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
+            cameraData.antialiasing = HDAdditionalCameraData.AntialiasingMode.TemporalAntialiasing;
+            cameraData.TAAQuality = HDAdditionalCameraData.TAAQualityLevel.High;
+            cameraData.taaSharpenStrength = 0.42f;
+            cameraData.taaRingingReduction = 0.32f;
+            playerCamera.nearClipPlane = 0.07f;
+            playerCamera.farClipPlane = 1400f;
             playerCamera.fieldOfView = 72f;
             cameraObject.AddComponent<AudioListener>();
             SetCursor(true);

@@ -53,7 +53,7 @@ public static class NorthwildTextureImporter
                 importer.alphaSource = TextureImporterAlphaSource.FromInput;
                 importer.alphaIsTransparency = true;
                 importer.mipMapsPreserveCoverage = true;
-                importer.alphaTestReferenceValue = 0.34f;
+                importer.alphaTestReferenceValue = 0.44f;
             }
             if (changed)
                 importer.SaveAndReimport();

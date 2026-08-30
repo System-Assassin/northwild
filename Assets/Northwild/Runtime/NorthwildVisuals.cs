@@ -22,6 +22,8 @@ namespace Northwild
         private static Texture2D foliageTexture;
         private static Texture2D cutWoodTexture;
         private static Texture2D clothTexture;
+        private static Texture2D waterNormalTexture;
+        private static Material waterMaterial;
         private static Mesh spruceCrownMesh;
         private static Mesh birchCrownMesh;
         private static readonly Dictionary<string, Material> sharedPrimitiveMaterials =
@@ -69,6 +71,110 @@ namespace Northwild
                 HDMaterial.ValidateMaterial(material);
             }
             return material;
+        }
+
+        public static Material WaterMaterial()
+        {
+            if (waterMaterial != null)
+                return waterMaterial;
+
+            Shader shader = Shader.Find("HDRP/Lit");
+            if (shader == null)
+                shader = Shader.Find("Standard");
+            waterMaterial = new Material(shader);
+            waterMaterial.name = "Northwild Wind-Rippled Lake Water";
+            Color water = new Color(0.035f, 0.13f, 0.18f, 0.86f);
+            waterMaterial.color = water;
+            SetColourIfPresent(waterMaterial, "_BaseColor", water);
+            SetFloatIfPresent(waterMaterial, "_SurfaceType", 1f);
+            SetFloatIfPresent(waterMaterial, "_BlendMode", 0f);
+            SetFloatIfPresent(waterMaterial, "_ZWrite", 0f);
+            SetFloatIfPresent(waterMaterial, "_TransparentDepthPrepassEnable", 1f);
+            SetFloatIfPresent(waterMaterial, "_TransparentDepthPostpassEnable", 1f);
+            SetFloatIfPresent(waterMaterial, "_EnableFogOnTransparent", 1f);
+            SetFloatIfPresent(waterMaterial, "_EnableBlendModePreserveSpecularLighting", 1f);
+            SetFloatIfPresent(waterMaterial, "_RefractionModel", 1f);
+            SetFloatIfPresent(waterMaterial, "_Ior", 1.333f);
+            SetFloatIfPresent(waterMaterial, "_Smoothness", 0.93f);
+            SetFloatIfPresent(waterMaterial, "_Metallic", 0f);
+            SetFloatIfPresent(waterMaterial, "_CoatMask", 0.26f);
+
+            Texture2D ripples = WaterNormalTexture();
+            if (waterMaterial.HasProperty("_NormalMap"))
+            {
+                waterMaterial.SetTexture("_NormalMap", ripples);
+                waterMaterial.SetTextureScale("_NormalMap", new Vector2(18f, 18f));
+                SetFloatIfPresent(waterMaterial, "_NormalScale", 0.38f);
+            }
+            if (waterMaterial.HasProperty("_DetailMap"))
+            {
+                waterMaterial.SetTexture("_DetailMap", ripples);
+                waterMaterial.SetTextureScale("_DetailMap", new Vector2(47f, 47f));
+                SetFloatIfPresent(waterMaterial, "_DetailAlbedoScale", 0f);
+                SetFloatIfPresent(waterMaterial, "_DetailNormalScale", 0.19f);
+            }
+
+            waterMaterial.renderQueue = (int)RenderQueue.Transparent;
+            if (shader != null && shader.name.StartsWith("HDRP/"))
+                HDMaterial.ValidateMaterial(waterMaterial);
+            return waterMaterial;
+        }
+
+        private static Texture2D WaterNormalTexture()
+        {
+            if (waterNormalTexture != null)
+                return waterNormalTexture;
+
+            const int size = 128;
+            waterNormalTexture = new Texture2D(size, size, TextureFormat.RGBA32, true, true);
+            waterNormalTexture.name = "Procedural Wind Ripple Normals";
+            waterNormalTexture.wrapMode = TextureWrapMode.Repeat;
+            waterNormalTexture.filterMode = FilterMode.Trilinear;
+            waterNormalTexture.anisoLevel = 8;
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float left = RippleHeight(x - 1, y, size);
+                    float right = RippleHeight(x + 1, y, size);
+                    float down = RippleHeight(x, y - 1, size);
+                    float up = RippleHeight(x, y + 1, size);
+                    Vector3 normal = new Vector3(
+                        (left - right) * 1.9f,
+                        (down - up) * 1.9f,
+                        1f).normalized;
+                    pixels[y * size + x] = new Color(
+                        normal.x * 0.5f + 0.5f,
+                        normal.y * 0.5f + 0.5f,
+                        normal.z * 0.5f + 0.5f,
+                        1f);
+                }
+            }
+            waterNormalTexture.SetPixels(pixels);
+            waterNormalTexture.Apply(true, true);
+            return waterNormalTexture;
+        }
+
+        private static float RippleHeight(int x, int y, int size)
+        {
+            float nx = Mathf.Repeat(x, size) / size;
+            float ny = Mathf.Repeat(y, size) / size;
+            float broad = Mathf.PerlinNoise(nx * 8f + 5f, ny * 8f + 17f);
+            float cross = Mathf.PerlinNoise(nx * 17f - ny * 3f + 31f, ny * 17f + nx * 2f + 9f);
+            return broad * 0.62f + cross * 0.38f;
+        }
+
+        private static void SetFloatIfPresent(Material material, string property, float value)
+        {
+            if (material.HasProperty(property))
+                material.SetFloat(property, value);
+        }
+
+        private static void SetColourIfPresent(Material material, string property, Color value)
+        {
+            if (material.HasProperty(property))
+                material.SetColor(property, value);
         }
 
         public static GameObject Primitive(
@@ -353,7 +459,7 @@ namespace Northwild
             return clothTexture;
         }
 
-        public static Material VegetationMaterial(string resourcePath, Color tint, float cutoff = 0.34f)
+        public static Material VegetationMaterial(string resourcePath, Color tint, float cutoff = 0.44f)
         {
             string key = resourcePath + ":" + ColorUtility.ToHtmlStringRGBA(tint) + ":" +
                 Mathf.RoundToInt(cutoff * 100f);
@@ -404,7 +510,7 @@ namespace Northwild
             Material material = VegetationMaterial(
                 birch ? "Vegetation/birch_branch" : "Vegetation/spruce_bough",
                 tint,
-                birch ? 0.3f : 0.36f);
+                birch ? 0.41f : 0.45f);
             return MeshObject(name, parent, localPosition, Quaternion.identity, localScale, mesh, material);
         }
 
@@ -487,7 +593,7 @@ namespace Northwild
             Material material = VegetationMaterial(
                 "Vegetation/boreal_undergrowth",
                 new Color(0.82f, 0.9f, 0.74f),
-                0.32f);
+                0.4f);
             return MeshObject(name, parent, Vector3.zero, Quaternion.identity, Vector3.one, mesh, material);
         }
 

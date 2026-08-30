@@ -66,8 +66,8 @@ namespace Northwild
             fog.baseHeight.Override(-8f);
             fog.maximumHeight.Override(145f);
             fog.meanFreePath.Override(targetFogDistance);
-            fog.maxFogDistance.Override(400f);
-            fog.depthExtent.Override(280f);
+            fog.maxFogDistance.Override(1350f);
+            fog.depthExtent.Override(900f);
             fog.albedo.Override(new Color(0.82f, 0.88f, 0.91f));
             fog.anisotropy.Override(0.35f);
 
@@ -86,8 +86,14 @@ namespace Northwild
             tonemapping.mode.Override(TonemappingMode.ACES);
 
             ColorAdjustments colourAdjustments = profile.Add<ColorAdjustments>(true);
-            colourAdjustments.contrast.Override(-8f);
-            colourAdjustments.saturation.Override(-4f);
+            colourAdjustments.contrast.Override(-4f);
+            colourAdjustments.saturation.Override(-7f);
+
+            ScreenSpaceAmbientOcclusion ambientOcclusion = profile.Add<ScreenSpaceAmbientOcclusion>(true);
+            ambientOcclusion.intensity.Override(0.72f);
+            ambientOcclusion.radius.Override(0.48f);
+            ambientOcclusion.directLightingStrength.Override(0.08f);
+            ambientOcclusion.temporalAccumulation.Override(true);
 
             indirectLighting = profile.Add<IndirectLightingController>(true);
             indirectLighting.indirectDiffuseLightingMultiplier.Override(1.25f);
@@ -112,6 +118,14 @@ namespace Northwild
                 fog.meanFreePath.value,
                 targetFogDistance,
                 Time.deltaTime * 55f));
+            fog.maxFogDistance.Override(Mathf.MoveTowards(
+                fog.maxFogDistance.value,
+                Mathf.Clamp(targetFogDistance * 1.15f, 360f, 1400f),
+                Time.deltaTime * 80f));
+            fog.depthExtent.Override(Mathf.MoveTowards(
+                fog.depthExtent.value,
+                Mathf.Clamp(targetFogDistance * 0.78f, 260f, 980f),
+                Time.deltaTime * 60f));
         }
 
         private void ApplyWeather(bool force)
