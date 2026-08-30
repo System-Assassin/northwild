@@ -12,6 +12,7 @@ namespace Northwild
 
         public bool IsSprinting { get; private set; }
         public bool IsMoving { get; private set; }
+        public bool IsCrouching { get { return crouching; } }
 
         private void Awake()
         {
@@ -56,7 +57,7 @@ namespace Northwild
     public sealed class PlayerCameraRig : MonoBehaviour
     {
         private Transform target;
-        private Renderer playerRenderer;
+        private ProceduralSurvivorVisual playerVisual;
         private Camera playerCamera;
         private float yaw;
         private float pitch = 8f;
@@ -66,10 +67,10 @@ namespace Northwild
         public Camera PlayerCamera { get { return playerCamera; } }
         public bool FirstPerson { get { return firstPerson; } }
 
-        public void Configure(Transform playerTarget, Renderer visibleRenderer)
+        public void Configure(Transform playerTarget, ProceduralSurvivorVisual visibleModel)
         {
             target = playerTarget;
-            playerRenderer = visibleRenderer;
+            playerVisual = visibleModel;
             yaw = target.eulerAngles.y;
 
             GameObject cameraObject = new GameObject("Player Camera");
@@ -135,8 +136,8 @@ namespace Northwild
                 playerCamera.transform.rotation = viewRotation;
             }
 
-            if (playerRenderer != null)
-                playerRenderer.enabled = !firstPerson;
+            if (playerVisual != null)
+                playerVisual.SetVisible(!firstPerson);
         }
 
         private void SetCursor(bool captured)

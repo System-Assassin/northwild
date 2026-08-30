@@ -112,10 +112,33 @@ namespace Northwild
             NorthwildVisuals.RemoveCollider(ridge);
 
             GameObject roof = NorthwildVisuals.Primitive(
-                PrimitiveType.Cube, "Layered Bough Roof", transform,
-                new Vector3(0f, 1.45f, 0.18f), new Vector3(4.1f, 0.24f, 3.3f),
-                new Color(0.12f, 0.27f, 0.1f));
+                PrimitiveType.Cube, "Bough Roof Shadow Base", transform,
+                new Vector3(0f, 1.45f, 0.18f), new Vector3(4.05f, 0.16f, 3.25f),
+                new Color(0.075f, 0.13f, 0.065f));
             roof.transform.localRotation = Quaternion.Euler(34f, 0f, 0f);
+
+            Transform boughCards = new GameObject("Overlapping Spruce Boughs").transform;
+            boughCards.SetParent(transform, false);
+            boughCards.localPosition = new Vector3(0f, 1.48f, 0.18f);
+            boughCards.localRotation = Quaternion.Euler(-56f, 0f, 0f);
+            Material boughMaterial = NorthwildVisuals.VegetationMaterial(
+                "Vegetation/spruce_bough", new Color(0.62f, 0.72f, 0.55f), 0.36f);
+            for (int row = 0; row < 4; row++)
+            {
+                for (int column = -1; column <= 1; column++)
+                {
+                    GameObject bough = NorthwildVisuals.Primitive(
+                        PrimitiveType.Quad,
+                        "Shelter Spruce Bough",
+                        boughCards,
+                        new Vector3(column * 1.28f + (row % 2) * 0.18f, (row - 1.5f) * 0.73f, -row * 0.008f),
+                        new Vector3(1.62f, 1.18f, 1f),
+                        Color.white);
+                    bough.transform.localRotation = Quaternion.Euler(0f, 0f, column * 8f + row * 4f);
+                    bough.GetComponent<Renderer>().sharedMaterial = boughMaterial;
+                    NorthwildVisuals.RemoveCollider(bough);
+                }
+            }
 
             GameObject bed = NorthwildVisuals.Primitive(
                 PrimitiveType.Cube, "Insulated Bed", transform,

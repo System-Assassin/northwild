@@ -53,17 +53,9 @@ namespace Northwild
 
         private void CreatePlayer()
         {
-            Player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            Player = new GameObject("Survivor");
             Player.name = "Survivor";
             Player.transform.position = World.PlayerSpawn;
-            Player.GetComponent<Renderer>().sharedMaterial = NorthwildVisuals.Material(new Color(0.19f, 0.25f, 0.3f));
-
-            Collider primitiveCollider = Player.GetComponent<Collider>();
-            if (primitiveCollider != null)
-            {
-                primitiveCollider.enabled = false;
-                Destroy(primitiveCollider);
-            }
 
             CharacterController controller = Player.AddComponent<CharacterController>();
             controller.height = 1.9f;
@@ -73,13 +65,15 @@ namespace Northwild
             controller.slopeLimit = 48f;
 
             BushcraftPlayerController movement = Player.AddComponent<BushcraftPlayerController>();
+            ProceduralSurvivorVisual survivorVisual = Player.AddComponent<ProceduralSurvivorVisual>();
+            survivorVisual.Configure(movement);
             Inventory = Player.AddComponent<PlayerInventory>();
             Vitals = Player.AddComponent<SurvivalVitals>();
             Vitals.Configure(movement, Climate);
 
             GameObject rigObject = new GameObject("Survivor Camera Rig");
             PlayerCameraRig cameraRig = rigObject.AddComponent<PlayerCameraRig>();
-            cameraRig.Configure(Player.transform, Player.GetComponent<Renderer>());
+            cameraRig.Configure(Player.transform, survivorVisual);
 
             Interaction = Player.AddComponent<PlayerInteraction>();
             Interaction.Configure(cameraRig, Inventory);

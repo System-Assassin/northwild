@@ -353,11 +353,15 @@ namespace Northwild
                         ? new Vector3(side * 0.18f, 0.22f, 0f)
                         : new Vector3(0f, 0.38f, side * 0.18f);
                     float yaw = layer == 0 ? 42f : -48f;
-                    GameObject log = NorthwildVisuals.Primitive(
-                        PrimitiveType.Cylinder, "Charred Firewood", transform, position,
-                        new Vector3(0.11f, 0.53f, 0.11f), new Color(0.16f, 0.075f, 0.028f));
-                    log.transform.localRotation = Quaternion.Euler(0f, yaw, 90f);
-                    NorthwildVisuals.RemoveCollider(log);
+                    NorthwildVisuals.CreateLog(
+                        "Charred Split Firewood",
+                        transform,
+                        position,
+                        Quaternion.Euler(0f, yaw, 90f),
+                        0.11f,
+                        1.06f,
+                        true,
+                        false);
                 }
             }
 

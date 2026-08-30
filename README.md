@@ -1,6 +1,6 @@
 # Northwild HDRP
 
-Northwild HDRP is the high-fidelity edition of the Windows-first, single-player bushcraft survival prototype. It now uses a real 1 km², one-metre-sample terrain crop from Nedre Roasten in Femundsmarka, Norway, alongside physically based sky rendering, true volumetric cloud volumes, cloud shadows, volumetric fog, weather-driven cloud presets, HDRP lighting and 2K PBR terrain, bark and stone surfaces.
+Northwild HDRP is the high-fidelity edition of the Windows-first, single-player bushcraft survival prototype. It uses a real 1 km², one-metre-sample terrain crop from Nedre Roasten in Femundsmarka, Norway, alongside physically based sky rendering, true volumetric cloud volumes, cloud shadows, volumetric fog, weather-driven cloud presets, HDRP lighting, 2K PBR surfaces and original alpha-clipped boreal vegetation.
 
 ## Recommended editor
 
@@ -21,7 +21,9 @@ HDRP configures itself on first open. If Unity was interrupted during import, se
 
 The clear-weather lighting uses a neutral white sun, controlled HDRP exposure and a blue-grey Scandinavian sky gradient. Volumetric clouds remain fully enabled, with natural warm tones limited to sunrise and sunset.
 
-The texture importer configures the supplied normal and HDRP mask maps automatically. If a texture ever appears flat or glossy after an interrupted import, select **Northwild > HDRP > Reimport PBR Textures** once.
+The texture importer configures the supplied normal maps, HDRP mask maps and coverage-preserving vegetation alpha automatically. If a texture ever appears flat, glossy or boxed-in after an interrupted import, select **Northwild > HDRP > Reimport PBR Textures** once.
+
+The visual realism pass replaces the original sphere trees and capsule player with layered Norway spruce and downy birch crowns, batched bilberry/fern undergrowth, exposed-rock terrain blending, fallen timber, cut-ended firewood, detailed gatherable props, a layered-bough shelter and an articulated third-person survivor with a walking gait.
 
 The measured heightmap preserves the real shoreline, islands and land relief. A shallow synthetic lake bed was added beneath the surveyed water surface so the HDRP water plane renders cleanly. Source details and attribution are in `Assets/Northwild/SourceData/Heightmaps/README.md`.
 
@@ -64,4 +66,4 @@ The measured heightmap preserves the real shoreline, islands and land relief. A 
 
 ## Prototype status
 
-This is the systems-first HDRP vertical slice. The survival logic, real measured terrain and PBR surface pass are functional while vegetation and item geometry remain intentionally simple. Production-quality scanned vegetation, character animation, hand interactions, wildlife, sound and item models belong in the next milestone after the survival loop is playtested.
+This is a systems-first HDRP vertical slice. The survival logic, measured terrain, PBR surfaces and first environmental-art pass are functional. The new vegetation is performance-conscious instanced/batched card geometry and the third-person survivor is an articulated procedural model, so a fully rigged production character, hand interactions, wildlife and spatial sound remain future milestones.

@@ -5,6 +5,20 @@ the repository until their licence and redistribution requirements have been
 checked. Add them to the local Unity project through Package Manager rather
 than copying a downloaded `.unitypackage` into Git.
 
+## Included original vegetation
+
+The following 1024 px transparent vegetation textures were created specifically
+for Northwild and are committed directly to the repository:
+
+- `spruce_bough.png` — layered Norway spruce crowns and shelter roofing
+- `birch_branch.png` — downy birch crown clusters
+- `boreal_undergrowth.png` — bilberry, woodland grass and fern patches
+
+They are project-original generated assets rather than copied Unity Asset Store
+content. Runtime code renders them as alpha-clipped, double-sided HDRP cards;
+the texture importer preserves alpha coverage in their mip maps to reduce noisy
+edges at distance.
+
 ## Recommended first pack
 
 ### Unity Terrain - HDRP Demo Scene
